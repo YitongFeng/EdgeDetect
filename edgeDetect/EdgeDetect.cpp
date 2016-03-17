@@ -8,34 +8,33 @@ using namespace std;
 #define debug
 
 int main(){
+	int ratio = 3;
+	int lowThreshold = 10;
+	int kernel_size = 3;
+	Mat detected_edges;
 	Mat img = imread("b00002.jpg");
-	medianBlur(img, img, 3);
-	resize(img, img, Size(img.cols / 3, img.rows / 3));
-	
-	namedWindow("picture");
-	int nr = img.rows;
-	int nc = img.cols;
-	Point lastBlackPoint = Point(0, 0);
-	for(int i = nr / 20; i < nr; i+=5){
-		const uchar* data = img.ptr<uchar>(i);
-		for(int j = nc / 20; j < nc / 2; j++){
-#ifdef debug1
-			cout <<"Point value: "<< Point(j - 1, i) <<" "<< (int)data[j] <<endl;
-#endif
-			if(data[j] == 0){
-#ifdef debug
-				cout << (int)data[j] << endl;
-				cout << "point: " << Point(j-1, i)<<endl;
-				circle(img, Point(j - 1, i), 3, Scalar(255, 0, 0));
-#endif
-				if(lastBlackPoint.x != 0)
-					line(img, lastBlackPoint, Point(j - 1, i), Scalar(0, 0, 255));
-				lastBlackPoint = Point(j - 1, i);
-				break;
-			}
-		}
+
+	if (!img.data){
+		cout << "Load image failed!" << endl;
+		return -1;
 	}
-	imshow("picture", img);
+	
+	//canny edge detect
+	resize(img, img, Size(img.cols / 3, img.rows / 3));
+	blur(img, detected_edges, Size(3, 3));
+	Canny(img, detected_edges, lowThreshold, lowThreshold * ratio, kernel_size);
+	
+	//show the detected edges
+	Mat dst(img.size(), img.type());
+	dst = Scalar::all(0);
+	img.copyTo(dst, detected_edges);
+
+	namedWindow("origin");
+	namedWindow("result");
+
+	imshow("origin", img);
+	imshow("result", dst);
+
 	waitKey();
 	return 0;
 }
