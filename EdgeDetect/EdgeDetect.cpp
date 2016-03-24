@@ -5,26 +5,36 @@
 using namespace cv;
 using namespace std;
 
-//#define debug
+#define debug_moment
 
 int main(){
-	float thresh = 0.18;
-	Mat src = imread("b100001.jpg");
+	float thresh = 0.1;
+	Mat src = imread("1.jpg");
 	if (!src.data){
 		cout << "Load image failed!" << endl;
-		return -1;
+		return -2;
 	}
 
 	resize(src, src, Size(src.cols / 4, src.rows / 4));
 	Mat img; 
 	cvtColor(src, img, CV_BGR2GRAY);
 	threshold(img, img, 127, 255, THRESH_BINARY);
-	erode(img, img, Mat(3, 3, CV_8U));
 	//medianBlur(img, img, 3);
-	//blur(src, img, Size(3,3));
-	//resize(img, img, Size(img.cols / 4, img.rows / 4));
-	
-	int nr = img.rows;
+	//blur(img, img, Size(3, 3));
+	erode(img, img, Mat(3, 3, CV_8U));
+
+	Mat m;
+	bitwise_xor(img, Scalar(255), m);
+	Moments mon = moments(m, true);
+	int y_momnet = mon.m01 / mon.m00;
+	int x_momnet = mon.m10 / mon.m00;
+
+#ifdef debug_moment
+	cout << "y_momnet: " << y_momnet << endl;
+	circle(src, Point(x_momnet, y_momnet),3, Scalar(255, 0, 0));
+#endif
+
+	int nr = y_momnet * 2;
 	int nc = img.cols;
 	
 	for (int j = 5; j < nc / 2; j++){
@@ -33,7 +43,7 @@ int main(){
 			if ( (int)(img.at<uchar>(i, j)) < 10)
 				count++;
 		}
-		if(count > (thresh * nr)){
+		if(count > thresh * nr){
 			line(src, Point(j - 1, 0), Point(j - 1, nr), Scalar(0, 0, 255));
 			break;
 		}
@@ -41,7 +51,7 @@ int main(){
 
 	for (int j = nc - 5; j > nc / 2; j--){
 		int count = 0;
-		for (int i = 5; i < nr / 2; i++){
+		for (int i = 5; i < nr; i++){
 			if ( (int)(img.at<uchar>(i, j)) < 10)
 				count++;
 		}
